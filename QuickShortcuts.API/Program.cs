@@ -1,5 +1,7 @@
-
+using QuickShortcuts.API.Data;
+using Microsoft.AspNetCore.Identity;
 using Swashbuckle.AspNetCore.Filters;
+using Microsoft.EntityFrameworkCore;
 
 namespace QuickShortcuts.API
 {
@@ -10,6 +12,19 @@ namespace QuickShortcuts.API
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            builder.Services.AddDbContext<ApplicationDbContext>();
+            builder.Services.AddAuthorization();
+            builder.Services.AddIdentityApiEndpoints<IdentityUser>(opt =>
+            {
+                opt.Password.RequiredLength = 3;
+                opt.Password.RequireDigit = false;
+                opt.Password.RequireLowercase = false;
+                opt.Password.RequireUppercase = false;
+                opt.Password.RequireNonAlphanumeric = false;
+                opt.User.RequireUniqueEmail = false;
+                opt.SignIn.RequireConfirmedAccount = false;
+
+            }).AddRoles<IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 
             builder.Services.AddControllersWithViews();
             builder.Services.AddRazorPages();
@@ -25,6 +40,8 @@ namespace QuickShortcuts.API
                 });
                 options.OperationFilter<SecurityRequirementsOperationFilter>();
             });
+
+            
 
             var app = builder.Build();
 
@@ -42,7 +59,7 @@ namespace QuickShortcuts.API
             app.UseStaticFiles();
 
             app.UseAuthorization();
-
+            app.MapIdentityApi<IdentityUser>();
 
             app.MapRazorPages();
             app.MapControllers();
